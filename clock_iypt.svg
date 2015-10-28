@@ -161,7 +161,7 @@
         var stoppoint = stopx + "," + stopy + " ";
         var pathdescription = center + startpoint + arcradius + "0 " + largeflag + sweepflag + stoppoint + "z";
         arc.setAttributeNS(null,"d",pathdescription);
-        if (phases[current_phase].current_time >= total_time * 3/4) {
+        if (phases[current_phase].current_time >= total_time - 30) {
           arc.setAttributeNS(null,"fill", "red"); 
         }
         if (phases[current_phase].current_time >= total_time) {
