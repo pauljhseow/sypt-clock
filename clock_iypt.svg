@@ -2,9 +2,10 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
 "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
 <svg xmlns="http://www.w3.org/2000/svg"
-  xmlns:xlink="http://www.w3.org/1999/xlink" >
-  <script type="text/javascript">
-    <![CDATA[
+		xmlns:xlink="http://www.w3.org/1999/xlink" >
+
+	<script type="text/javascript">
+		<![CDATA[
       var timer_active = false; 
       var t;
       var warning_timer;
@@ -25,13 +26,14 @@
         phases.push(new Phase("The Opponent takes the floor", 240 , false));
         phases.push(new Phase("Discussion between the Reporter and the Opponent", 600 , true));
         phases.push(new Phase("The Opponent summarizes the discussion", 60 , false));
-        phases.push(new Phase("Questions of the Reviewer to the Reporter and the Opponent and answers to the questions", 180 , false));
+        phases.push(new Phase("Questions of the Reviewer to the Reporter and the Opponent and answers to the questions", 180 , false,[], [], []));
         phases.push(new Phase("Preparation of the Reviewer", 120 , false));
         phases.push(new Phase("The Reviewer takes the floor", 240 , false));
         phases.push(new Phase("Concluding remarks of the Reporter", 120 , false));
         phases.push(new Phase("Questions of the Jury", 300 , false));
+        phases.push(new Phase("Grading", 300 , false));
         phases.push(new Phase("PAUSE", 600 , false));
-      }      
+      }            
       
       function Phase (name, duration, linked) {
         this.name = name;
@@ -97,6 +99,26 @@
           draw();
         }
       }
+	  
+	  function plus10 () {
+        if(current_phase >= 0) {
+          phases[current_phase].current_time += 10;
+		  updateSavedTime();
+		  resetColors();
+          draw();
+        }
+      }
+	  
+	  function minus10 () {
+        if(current_phase >= 0){
+		  if (phases[current_phase].current_time >= 10){
+          phases[current_phase].current_time -= 10;
+		  updateSavedTime();
+		  resetColors();
+          draw();
+		  }
+        }
+      }
       
       function updateLinkedOffset () {
         if (phases[current_phase].linked && current_phase > 0) {
@@ -107,12 +129,12 @@
       
       function resetColors () {
         if (phases[current_phase].current_time < phases[current_phase].duration + phases[current_phase].linked_offset) {
-          document.getElementById('background').setAttributeNS(null,"fill","#EEEEEE");
-          document.getElementById('foreground').setAttributeNS(null,"fill","blue");
+          document.getElementById('background').setAttributeNS(null,"fill","#eee");
+          document.getElementById('foreground').setAttributeNS(null,"fill","#3c0");
         }
         else {
-          document.getElementById('background').setAttributeNS(null,"fill","red");
-          document.getElementById('foreground').setAttributeNS(null,"fill","purple");
+          document.getElementById('background').setAttributeNS(null,"fill","f00");
+          document.getElementById('foreground').setAttributeNS(null,"fill","f90");
         }
       }
       
@@ -160,14 +182,37 @@
         var stopy = -Math.cos(angle)*radius+300;
         var stoppoint = stopx + "," + stopy + " ";
         var pathdescription = center + startpoint + arcradius + "0 " + largeflag + sweepflag + stoppoint + "z";
+		var re = /(?:\.([^.]+))?$/;
+		var index;
         arc.setAttributeNS(null,"d",pathdescription);
-        if (phases[current_phase].current_time >= total_time - 30) {
-          arc.setAttributeNS(null,"fill", "red"); 
+		arc.setAttributeNS(null,"stroke", "#000"); 
+		arc.setAttributeNS(null,"stroke-width", "1"); 
+		
+        if (phases[current_phase].current_time >= total_time * 3/4) {
+          arc.setAttributeNS(null,"fill", "#f90"); 
+        }
+		if (phases[current_phase].current_time >= total_time - 30) {
+          arc.setAttributeNS(null,"fill", "#f60"); 
+        }
+		if (phases[current_phase].current_time >= total_time - 10) {
+          arc.setAttributeNS(null,"fill", "#f00"); 
         }
         if (phases[current_phase].current_time >= total_time) {
-          arc.setAttributeNS(null, "fill", "purple");
-          document.getElementById('background').setAttributeNS(null,"fill","red");
+          arc.setAttributeNS(null, "fill", "#f00");
+          document.getElementById('background').setAttributeNS(null,"fill","#f90");
         }
+		if (phases[current_phase].current_time >= total_time + 10) {
+          arc.setAttributeNS(null, "fill", "#fa0");
+          document.getElementById('background').setAttributeNS(null,"fill","#fa0");
+		  document.getElementById('background').setAttributeNS(null,"stroke","#fa0");
+		  arc.setAttributeNS(null,"stroke-width", "0"); 
+		  if (phases[current_phase].current_time % 2) {
+             arc.setAttributeNS(null, "fill", "#f00");
+             document.getElementById('background').setAttributeNS(null,"fill","#f00");
+			 document.getElementById('background').setAttributeNS(null,"stroke","#f00");
+        }
+        }
+
       }
 
       function toMinutesSeconds (sec) {
@@ -178,98 +223,128 @@
         return (minutes_string + ":" + seconds_string);
       }
 
-    // Copied from http://www.openjs.com/scripts/events/exit_confirmation.php
-    function goodbye(e) {
-    if(!e) e = window.event;
-  //e.cancelBubble is supported by IE - this will kill the bubbling process.
-  e.cancelBubble = true;
-  e.returnValue = 'You sure you want to leave?'; //This is displayed on the dialog
-
-  //e.stopPropagation works in Firefox.
-  if (e.stopPropagation) {
-    e.stopPropagation();
-    e.preventDefault();
-  }
+      function goodbye(e) {
+        if(!e) e = window.event;
+        e.cancelBubble = true;
+        e.returnValue = 'You sure you want to leave?'; //This is displayed on the dialog
+        if (e.stopPropagation) {
+          e.stopPropagation();
+          e.preventDefault();
+    }
 }
 window.onbeforeunload=goodbye;
     ]]>
-  </script>
-  <defs>
-    <linearGradient id="button_surface" gradientUnits="objectBoundingBox"
-      x1="1" x2="1" y1="0" y2="1">
-      <stop stop-color="#00a" offset="0"/>
-      <stop stop-color="#000" offset="0.67"/>
-    </linearGradient>
+	</script>
+	<defs>
+		<linearGradient id="button_surface" gradientUnits="objectBoundingBox"
+				x1="1" x2="1" y1="0" y2="1">
+			<stop stop-color="#eee" offset="0"/>
+			<stop stop-color="#444" offset="0.67"/>
+		</linearGradient>
 
-    <linearGradient id="virtual_light" gradientUnits="objectBoundingBox"
-      x1="0" x2="0" y1="0" y2="1">
-      <stop stop-color="#eef" offset="0" stop-opacity="1"/>
-      <stop stop-color="#449" offset="0.4" stop-opacity="0.5"/>
-    </linearGradient>
-  </defs>
-  <circle id="background" cx="400" cy="400" r="300" stroke="black" stroke-width="1" fill="#EEEEEE"  onclick="startstop()"/>
-  <path id="foreground" d = "M400,400 v-300 a300,300 0 1,1 0,0 z" fill="blue" onclick="startstop()" />
-  <text id="timedisplay" x="70" y="80" style="font-family:Tahoma; font-size: 65pt; font-weight: bold;"> </text>
-  <text id="phaselabel" x="50" y="750" style="font-family:Tahoma; font-size: 15pt; font-weight: bold;">Clock is reset and ready!</text>
-  <text x="50" y="770" style="font-family:Tahoma; font-size: 8pt; font-weight: bold; fill: #ccc;"> This work is &#169; 2012 Georg Hofferek and Timotheus Hell: licensed under a <a style="font-family:Tahoma; font-size: 8pt; font-weight: bold; fill: #ccc;" xlink:href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a>.</text>
-  <text x="50" y="785" style="font-family:Tahoma; font-size: 8pt; font-weight: bold; fill: #ccc;">Revision 17, report bugs to <a style="font-family:Tahoma; font-size: 8pt; font-weight: bold; fill: #ccc;" xlink:href="mailto:georg.hofferek@gmx.net">georg.hofferek@gmx.net</a></text>
-  <text id="warninglabel" x="50" y="725" style="font-family:Tahoma; font-size: 15pt; font-weight: bold; fill: red;"> </text>
+		<linearGradient id="virtual_light" gradientUnits="objectBoundingBox"
+				x1="0" x2="0" y1="0" y2="1">
+			<stop stop-color="#eee" offset="0" stop-opacity="1"/>
+			<stop stop-color="#333" offset="0.4" stop-opacity="0.5"/>
+		</linearGradient>
+	</defs>
 
-  <style type="text/css">
-  g.button:hover{
-    opacity: 0.90;
-  }
-</style>
-<g class="button" cursor="pointer"
-   onmouseup="startstop()">
-  <rect class="button" cursor="pointer" x="810" y="110" rx="15"
-ry="15" width="150" height="60"
-    fill="url(#button_surface)" stroke="#ffffff"/>
-   <rect x="812" y="112" rx="15" ry="15" width="146" height="56"
-    fill="url(#virtual_light)" stroke="#FFFFFF" stroke-opacity="0.4"/>
-  <text id="startstop_button_text" x="830" y="145" fill="white"
-    font-family="Tahoma" font-size="16" font-weight="500">
-    Start Clock
-  </text>
-</g>
 
-<g class="button" cursor="pointer"
-   onmouseup="resetPhase()">
-  <rect class="button" cursor="pointer" x="810" y="210" rx="15"
-ry="15" width="150" height="60"
-    fill="url(#button_surface)" stroke="#ffffff"/>
-    <rect x="812" y="212" rx="15" ry="15" width="146" height="56"
-    fill="url(#virtual_light)" stroke="#FFFFFF" stroke-opacity="0.4"/>
-  <text x="830" y="245" fill="white"
-    font-family="Tahoma" font-size="16" font-weight="500">
-    Reset Phase
-  </text>
-</g>
+	<circle id="background" cx="400" cy="400" r="300" stroke="black" stroke-width="0" fill="#eee"  onclick="startstop()"/>
+	<path id="foreground" d = "M400,400 v-300 a300,300 0 1,1 0,0 z" fill="blue" onclick="startstop()" />
+	<text id="timedisplay" x="70" y="80" style="font-family:Tahoma; font-size: 65pt; font-weight: bold;"> </text>
+	<text id="phaselabel" x="50" y="750" style="font-family:Tahoma; font-size: 15pt; font-weight: bold;">Clock is reset and ready!</text>
+	<text x="50" y="770" style="font-family:Tahoma; font-size: 7pt; font-weight: bold; fill: #ccc;"> &#169; 2012-16 Georg Hofferek and Timotheus Hell: licensed under a <a style="font-family:Tahoma; font-size: 7pt; font-weight: bold; fill: #ccc;" xlink:href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a>.</text>
+	<text id="warninglabel" x="50" y="725" style="font-family:Tahoma; font-size: 15pt; font-weight: bold; fill: red;"> </text>
 
-<g class="button" cursor="pointer"
-   onmouseup="previousPhase()">
-  <rect class="button" cursor="pointer" x="810" y="310" rx="15"
-ry="15" width="150" height="60"
-    fill="url(#button_surface)" stroke="#ffffff"/>
-    <rect x="812" y="312" rx="15" ry="15" width="146" height="56"
-    fill="url(#virtual_light)" stroke="#FFFFFF" stroke-opacity="0.4"/>
-  <text x="830" y="345" fill="white"
-    font-family="Tahoma" font-size="16" font-weight="500">
-    Previous Phase
-  </text>
+	<style type="text/css">
+		g.button:hover{
+		opacity: 0.90;
+		}
+	</style>
+	<g class="button" cursor="pointer"
+			onmouseup="startstop()">
+		<rect class="button" cursor="pointer" x="810" y="110" rx="5"
+				ry="5" width="150" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="812" y="112" rx="5" ry="5" width="146" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text id="startstop_button_text" x="830" y="140" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			Start Clock
+		</text>
+	</g>
 
-</g>
+	<g class="button" cursor="pointer"
+			onmouseup="resetPhase()">
+		<rect class="button" cursor="pointer" x="810" y="210" rx="5"
+				ry="5" width="150" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="812" y="212" rx="5" ry="5" width="146" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text x="830" y="240" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			Reset Phase
+		</text>
+	</g>
 
-<g class="button" cursor="pointer"
-   onmouseup="nextPhase()">
-  <rect class="button" cursor="pointer" x="810" y="410" rx="15"
-ry="15" width="150" height="60"
-    fill="url(#button_surface)" stroke="#ffffff"/>
-	  <rect x="812" y="412" rx="15" ry="15" width="146" height="56"
-    fill="url(#virtual_light)" stroke="#FFFFFF" stroke-opacity="0.4"/>
-  <text x="830" y="445" fill="white"
-    font-family="Tahoma" font-size="16" font-weight="500">
-    Next Phase
-  </text>
-</g>
+	<g class="button" cursor="pointer"
+			onmouseup="previousPhase()">
+		<rect class="button" cursor="pointer" x="810" y="410" rx="5"
+				ry="5" width="70" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="812" y="412" rx="5" ry="5" width="66" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text x="823" y="440" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			&lt; &lt;
+		</text>
+
+	</g>
+
+
+	<g class="button" cursor="pointer"
+			onmouseup="nextPhase()">
+		<rect class="button" cursor="pointer" x="890" y="410" rx="5"
+				ry="5" width="70" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="892" y="412" rx="5" ry="5" width="66" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text x="920" y="440" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			&gt; &gt;
+		</text>
+	</g>
+
+
+
+	<g class="button" cursor="pointer"
+			onmouseup="minus10()">
+		<rect class="button" cursor="pointer" x="810" y="310" rx="5"
+				ry="5" width="70" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="812" y="312" rx="5" ry="5" width="66" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text x="823" y="340" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			-10
+		</text>
+
+	</g>
+
+
+	<g class="button" cursor="pointer"
+			onmouseup="plus10()">
+		<rect class="button" cursor="pointer" x="890" y="310" rx="5"
+				ry="5" width="70" height="50"
+				fill="url(#button_surface)" stroke="#fff"/>
+		<rect x="892" y="312" rx="5" ry="5" width="66" height="46"
+				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
+		<text x="916" y="340" fill="white"
+				font-family="Tahoma" font-size="16" font-weight="500">
+			+10
+		</text>
+	</g>
+
+
 </svg>
