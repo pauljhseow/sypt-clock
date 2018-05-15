@@ -12,8 +12,10 @@
       var radius = 300;
       var topleftspacing = 100;
       var current_phase = -1;
-	  var saved_timestamp;
-	  var saved_ticks;
+      
+      var startTime; // start time of phase in msecs since Jan 1 1970, 00:00:00 UTC, determined via os clock
+      var lastTickAt; // time when the last tick happened in msecs since Jan 1 '70, to trap system time changes
+      
       var phases = new Array();
       
       window.onload=function() {
@@ -33,33 +35,26 @@
         phases.push(new Phase("Questions of the Jury", 300 , false));
         phases.push(new Phase("Grading", 300 , false));
         phases.push(new Phase("PAUSE", 600 , false));
-      }            
+      }
       
-      function Phase (name, duration, linked) {
+      function Phase(name, duration, linked) {// duration passed in seconds
         this.name = name;
-        this.duration = duration;
+        this.duration = duration*1000; // convert to msecs for internal use
         this.linked_offset = 0;
         this.linked = linked;
         this.current_time = 0;
       }
       
-      function clearWarningLabel () {
+      function clearWarningLabel() {
         document.getElementById('warninglabel').firstChild.nodeValue = " ";
       }
-	  
-	  function updateSavedTime() {
-	    saved_timestamp = Math.floor((new Date().getTime())/1000);
-		saved_ticks = phases[current_phase].current_time;
-	  }
       
-	  function checkSavedTime () {
-	    var now = Math.floor((new Date().getTime())/1000);
-	    if ((now - saved_timestamp) - (phases[current_phase].current_time - saved_ticks) > 1) {
-          phases[current_phase].current_time = saved_ticks + (now - saved_timestamp);
-        }		
-	  }
-	  
-      function nextPhase () {
+      function updateStartTime() {
+        startTime = Date.now() - phases[current_phase].current_time;
+        lastTickAt = Date.now();
+      }
+      
+      function nextPhase() {
         if (current_phase + 1 >= phases.length) {
           document.getElementById('warninglabel').firstChild.nodeValue = "The current phase is already the last phase. There is no next phase.";
           clearTimeout(warning_timer);
@@ -68,7 +63,7 @@
         else {
           current_phase++;
           document.getElementById('phaselabel').firstChild.nodeValue = phases[current_phase].name;
-		  updateSavedTime();
+          updateStartTime();
           updateLinkedOffset();
           resetColors();
           draw();
@@ -85,7 +80,7 @@
           current_phase--;
           document.getElementById('phaselabel').firstChild.nodeValue = phases[current_phase].name;
           updateLinkedOffset();
-		  updateSavedTime();
+          updateStartTime();
           resetColors();
           draw();
         }
@@ -94,36 +89,41 @@
       function resetPhase () {
         if(current_phase >= 0) {
           phases[current_phase].current_time = 0;
-		  updateSavedTime();
-		  resetColors();
+          updateStartTime();
+          resetColors();
           draw();
         }
       }
-	  
-	  function plus10 () {
+      
+      function plus10() {
         if(current_phase >= 0) {
-          phases[current_phase].current_time += 10;
-		  updateSavedTime();
-		  resetColors();
+          phases[current_phase].current_time += 10000;
+          updateStartTime();
+          resetColors();
           draw();
         }
       }
-	  
-	  function minus10 () {
-        if(current_phase >= 0){
-		  if (phases[current_phase].current_time >= 10){
-          phases[current_phase].current_time -= 10;
-		  updateSavedTime();
-		  resetColors();
-          draw();
-		  }
+      
+      function minus10() {
+        if(current_phase >= 0) {
+          if (phases[current_phase].current_time >= 10000) {
+            phases[current_phase].current_time -= 10000;
+            updateStartTime();
+            resetColors();
+            draw();
+          } else {
+            phases[current_phase].current_time = 0;
+            updateStartTime();
+            resetColors();
+            draw();
+          }
         }
       }
       
       function updateLinkedOffset () {
         if (phases[current_phase].linked && current_phase > 0) {
           var offset = phases[current_phase-1].duration + phases[current_phase-1].linked_offset - phases[current_phase-1].current_time;
-          phases[current_phase].linked_offset = (offset > 0) ? offset : 0;
+          phases[current_phase].linked_offset = (offset > 0)? offset : 0;
         }
       }
       
@@ -145,22 +145,34 @@
         
         timer_active = !timer_active;
         if (timer_active) {
-		  updateSavedTime();
-          t = setTimeout("tick()", 1000);
+          updateStartTime();
+          t = setTimeout("tick()", 30);
           document.getElementById('startstop_button_text').firstChild.nodeValue = "Pause";
         }
         else {
           clearTimeout(t);
           document.getElementById('startstop_button_text').firstChild.nodeValue = "Start Clock";
-        }        
+        }
       }
 
       function tick () {
-        phases[current_phase].current_time++; 
-		checkSavedTime();
+        // Trap big "time jumps" occurring in the rare event of a changing system time (e.g. due to time synchronization)
+        if(Math.abs(Date.now() - lastTickAt) > 1000) {
+          /* Actually, ticks *will* happen with and interval roughly above 30ms, depending on the machine's performance
+           * Using this threshold of 1s is kind of a "compromise": (1) no actions will be taken on low-performant machines since they *will* tick with
+           * intervals less than 1s and (2) a "loss" of such a small amount of time is still managable (as opposed to a loss of multiple minutes)
+           */
+          phases[current_phase].current_time += 1000;
+          updateStartTime();
+        } else {
+          // The time elapsed since the large tick sounds reasonable. Everything's fine.
+          phases[current_phase].current_time = Date.now() - startTime;
+        }
+        
+        lastTickAt = Date.now();
         draw();
         if (timer_active) {
-          t = setTimeout("tick()", 1000);
+          t = setTimeout("tick()", 30);
         }
       }
       
@@ -191,31 +203,32 @@
         if (phases[current_phase].current_time >= total_time * 3/4) {
           arc.setAttributeNS(null,"fill", "#f90"); 
         }
-		if (phases[current_phase].current_time >= total_time - 30) {
+        if (phases[current_phase].current_time >= total_time - 30000) {
           arc.setAttributeNS(null,"fill", "#f60"); 
         }
-		if (phases[current_phase].current_time >= total_time - 10) {
+        if (phases[current_phase].current_time >= total_time - 10000) {
           arc.setAttributeNS(null,"fill", "#f00"); 
         }
         if (phases[current_phase].current_time >= total_time) {
           arc.setAttributeNS(null, "fill", "#f00");
           document.getElementById('background').setAttributeNS(null,"fill","#f90");
         }
-		if (phases[current_phase].current_time >= total_time + 10) {
+        if(phases[current_phase].current_time >= total_time + 10000) {
           arc.setAttributeNS(null, "fill", "#fa0");
           document.getElementById('background').setAttributeNS(null,"fill","#fa0");
-		  document.getElementById('background').setAttributeNS(null,"stroke","#fa0");
-		  arc.setAttributeNS(null,"stroke-width", "0"); 
-		  if (phases[current_phase].current_time % 2) {
-             arc.setAttributeNS(null, "fill", "#f00");
-             document.getElementById('background').setAttributeNS(null,"fill","#f00");
-			 document.getElementById('background').setAttributeNS(null,"stroke","#f00");
-        }
+          document.getElementById('background').setAttributeNS(null,"stroke","#fa0");
+          arc.setAttributeNS(null,"stroke-width", "0");
+          if((phases[current_phase].current_time % 2000) < 1000) {
+            arc.setAttributeNS(null, "fill", "#f00");
+            document.getElementById('background').setAttributeNS(null,"fill","#f00");
+            document.getElementById('background').setAttributeNS(null,"stroke","#f00");
+          }
         }
 
       }
 
-      function toMinutesSeconds (sec) {
+      function toMinutesSeconds (msec) {
+        var sec = Math.floor(msec/1000);
         var minutes = Math.floor(sec / 60);
         var seconds = sec % 60;
         var minutes_string = (minutes < 10) ? "0"+minutes : minutes.toString();
@@ -295,9 +308,9 @@ window.onbeforeunload=goodbye;
 				fill="url(#button_surface)" stroke="#fff"/>
 		<rect x="812" y="412" rx="5" ry="5" width="66" height="46"
 				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
-		<text x="823" y="440" fill="white"
+		<text x="840" y="440" fill="white"
 				font-family="Tahoma" font-size="16" font-weight="500">
-			&lt; &lt;
+			&#171;
 		</text>
 
 	</g>
@@ -312,7 +325,7 @@ window.onbeforeunload=goodbye;
 				fill="url(#virtual_light)" stroke="#fff" stroke-opacity="0.4"/>
 		<text x="920" y="440" fill="white"
 				font-family="Tahoma" font-size="16" font-weight="500">
-			&gt; &gt;
+			&#187;
 		</text>
 	</g>
 
