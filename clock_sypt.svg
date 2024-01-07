@@ -19,11 +19,11 @@
       var phases = new Array();
       
       window.onload=function() {
-        phases.push(new Phase("The Opponent challenges the Reporter for the problem", 60 , false));
+        phases.push(new Phase("Opponent challenges the Reporter for problem", 60 , false));
         phases.push(new Phase("The Reporter accepts or rejects the challenge", 60 , false));
         phases.push(new Phase("Preparation of the Reporter", 120 , false));
         phases.push(new Phase("Presentation of the report", 600 , false));
-        phases.push(new Phase("Questions of the Opponent to the Reporter and answers of the Reporter", 120 , false));
+        phases.push(new Phase("Opponent orally questions the Reporter", 120 , false));
         phases.push(new Phase("Preparation of the Opponent", 240 , false));
         phases.push(new Phase("The Opponent takes the floor", 300 , false));
         phases.push(new Phase("Discussion between the Reporter and the Opponent", 420 , true));
@@ -263,7 +263,7 @@ window.onbeforeunload=goodbye;
 	<circle id="background" cx="400" cy="400" r="300" stroke="black" stroke-width="0" fill="#eee"  onclick="startstop()"/>
 	<path id="foreground" d = "M400,400 v-300 a300,300 0 1,1 0,0 z" fill="blue" onclick="startstop()" />
 	<text id="timedisplay" x="70" y="80" style="font-family:Tahoma; font-size: 65pt; font-weight: bold;"> </text>
-	<text id="phaselabel" x="50" y="750" style="font-family:Tahoma; font-size: 15pt; font-weight: bold;">Clock is reset and ready!</text>
+	<text id="phaselabel" x="700" y="550" style="font-family:Tahoma; font-size: 14pt; font-weight: bold;">Clock is reset and ready!</text>
 	<text x="50" y="770" style="font-family:Tahoma; font-size: 7pt; font-weight: bold; fill: #ccc;"> &#169; 2012-16 Georg Hofferek and Timotheus Hell: licensed under a <a style="font-family:Tahoma; font-size: 7pt; font-weight: bold; fill: #ccc;" xlink:href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a>.</text>
 	<text id="warninglabel" x="50" y="725" style="font-family:Tahoma; font-size: 15pt; font-weight: bold; fill: red;"> </text>
 
