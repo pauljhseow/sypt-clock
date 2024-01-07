@@ -1,2 +1,4 @@
 # ISAC, the IYPT SVG automated clock
-A simple stopwatch / timer to be run in a Browser. Implemented for the IYPT (International Young Physicists' Tournament), easy to adapt e.g. for debating. It's now an integrated part of NEWTOON but also available standalone.
+Implemented for the SYPT (Singapore Young Physicists' Tournament).
+
+This version has been adapted from [timhell's IYPT clock](https://github.com/timhell/ISAC---IYPT-SVG-automated-clock).
